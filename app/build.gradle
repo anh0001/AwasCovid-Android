@@ -1,0 +1,106 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        applicationId "com.samples.flironecamera"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    repositories {
+        // default path where thermalsdk AAR is stored
+        flatDir dirs: '../thermalsdk-release'
+        // default path where androidsdk AAR is stored
+        flatDir dirs: '../androidsdk-release'
+        // superproject path where all required AARs are stored (for local debug builds only)
+        flatDir dirs: '../../../MastodonAndroid/prebuilt-aar'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions {
+        pickFirst 'lib/x86_64/libsqlcipher.so'
+        pickFirst 'lib/armeabi/libsqlcipher.so'
+        pickFirst 'lib/x86/libsqlcipher.so'
+        pickFirst 'lib/x86/libc++_shared.so'
+        pickFirst 'lib/x86/libmbwrapper.so'
+        pickFirst 'lib/x86/libboost.so'
+        pickFirst 'lib/x86/librbp.so'
+        pickFirst 'lib/x86/libsystemimage.so'
+        pickFirst 'lib/x86/libtigerdeps.so'
+        pickFirst 'lib/x86/libzmq.so'
+        pickFirst 'lib/x86/libRBPDeviceWrapper.so'
+        pickFirst 'lib/x86/libatlas_native.so'
+        pickFirst 'lib/arm64-v8a/libc++_shared.so'
+        pickFirst 'lib/armeabi-v7a/libbase.so'
+        pickFirst 'lib/armeabi-v7a/libutils.so'
+        pickFirst 'lib/armeabi-v7a/libmbwrapper.so'
+        pickFirst 'lib/armeabi-v7a/libtigerdeps.so'
+        pickFirst 'lib/armeabi-v7a/libunwind.so'
+        pickFirst 'lib/armeabi-v7a/libzmq.so'
+        pickFirst 'lib/armeabi-v7a/libbinder.so'
+        pickFirst 'lib/armeabi-v7a/librbp.so'
+        pickFirst 'lib/armeabi-v7a/libbacktrace_custom.so'
+        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+        pickFirst 'lib/armeabi-v7a/libboost.so'
+        pickFirst 'lib/armeabi-v7a/libthermalcamera_client.so'
+        pickFirst 'lib/armeabi-v7a/libsystemimage.so'
+        pickFirst 'lib/armeabi-v7a/libcutils.so'
+        pickFirst 'lib/armeabi-v7a/liblzma.so'
+        pickFirst 'lib/armeabi-v7a/libRBPDeviceWrapper.so'
+        pickFirst 'lib/armeabi-v7a/libc++_custom.so'
+        pickFirst 'lib/armeabi-v7a/libatlas_native.so'
+        pickFirst 'lib/arm64-v8a/libunwind.so'
+        pickFirst 'lib/arm64-v8a/libcutils.so'
+        pickFirst 'lib/arm64-v8a/libbacktrace_custom.so'
+        pickFirst 'lib/arm64-v8a/libthermalcamera_client.so'
+        pickFirst 'lib/arm64-v8a/libsystemimage.so'
+        pickFirst 'lib/arm64-v8a/libutils.so'
+        pickFirst 'lib/arm64-v8a/liblzma.so’'
+        pickFirst 'lib/arm64-v8a/libzmq.so'
+        pickFirst 'lib/arm64-v8a/libboost.so'
+        pickFirst 'lib/arm64-v8a/libvndksupport.so'
+        pickFirst 'lib/arm64-v8a/libbinder.so'
+        pickFirst 'lib/arm64-v8a/libc++_custom.so'
+        pickFirst 'lib/arm64-v8a/libRBPDeviceWrapper.so'
+        pickFirst 'lib/arm64-v8a/librbp.so'
+        pickFirst 'lib/arm64-v8a/libbase.so'
+        pickFirst 'lib/arm64-v8a/libtigerdeps.so'
+        pickFirst 'lib/arm64-v8a/libmbwrapper.so'
+        pickFirst 'lib/arm64-v8a/libatlas_native.so'
+        pickFirst 'lib/arm64-v8a/liblzma.so'
+    }
+
+}
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    // add Thermal SDK 'aar' library located under 'modules/thermalsdk/build/outputs/aar'
+    // add Thermal SDK for Android 'aar' library located under 'modules/thermalsdk/build/outputs/aar'
+    implementation(name: 'androidsdk-release', ext: 'aar')
+    implementation(name: 'thermalsdk-release', ext: 'aar')
+    implementation 'org.jetbrains:annotations:15.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation project(path: ':androidsdk-release')
+    implementation project(path: ':thermalsdk-release')
+}
+
