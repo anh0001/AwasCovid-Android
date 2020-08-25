@@ -112,6 +112,12 @@
         android:layout_height="wrap_content"
         android:text="@string/connection_status_text"/>
 
+    <TextView
+        android:id="@+id/center_temp_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/center_temp_text" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">

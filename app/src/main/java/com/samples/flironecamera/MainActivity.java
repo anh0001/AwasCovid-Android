@@ -11,6 +11,7 @@
 package com.samples.flironecamera;
 
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,6 +38,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -73,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Identity connectedIdentity = null;
     private TextView connectionStatus;
+    private TextView centerPosTemperatureStatus;
     private boolean isConnected = false;
     private TextView discoveryStatus;
     private EditText sendUrlText;
@@ -85,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView photoImage;
     private File photoImageFile;  // save to a file for POST API
     private File thermalImageFile;
+    private File temperatureImageFile;
+    private int minTemperature, maxTemperature;
 
     private LinkedBlockingQueue<FrameDataHolder> framesBuffer = new LinkedBlockingQueue(21);
     private UsbPermissionHandler usbPermissionHandler = new UsbPermissionHandler();
@@ -121,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
         File filesDir = getApplicationContext().getFilesDir();
         photoImageFile = new File(filesDir, "photoImage.jpg");
         thermalImageFile = new File(filesDir, "thermalImage.jpg");
+        temperatureImageFile = new File(filesDir, "temperatureImage.jpg");
 
         showSDKversion(ThermalSdkAndroid.getVersion());
 
@@ -185,9 +191,9 @@ public class MainActivity extends AppCompatActivity {
 
                 // Any code which goes here will be executed every 'updateInterval'
                 if (isConnected && photoImage.getDrawable() != null && msxImage.getDrawable() != null) {
-                    Log.i(TAG, "Freq " + sendFreq + "Hz" + " URL: " + sendUrlText.getText().toString());
+                    Log.d(TAG, "Freq " + sendFreq + "Hz" + " URL: " + sendUrlText.getText().toString());
 
-                    // Get image from ImageView and save it to a file
+                    // --- Get image from ImageView and save it to a file
                     BitmapDrawable photoDrawable = (BitmapDrawable) photoImage.getDrawable();
                     Bitmap photoBitmap = photoDrawable.getBitmap();
                     BitmapDrawable thermalDrawable = (BitmapDrawable) msxImage.getDrawable();
@@ -213,7 +219,8 @@ public class MainActivity extends AppCompatActivity {
                     MultipartBody.Part thermalImageBody = MultipartBody.Part.createFormData("thermal_image", thermalImageFile.getName(), reqBodyThermalImage);
 
                     // call the API and wait for the result
-                    Call<String> call = retroService.sendImage("0001", photoImageBody, thermalImageBody);
+//                    Call<String> call = retroService.sendImage("0001", photoImageBody, thermalImageBody, temperatureImageBody);
+                    Call<String> call = retroService.sendImage("0001", minTemperature, maxTemperature, photoImageBody, thermalImageBody);
                     call.enqueue(new Callback<String>() {
                         @Override
                         public void onResponse(Call<String> call, Response<String> response) {
@@ -433,10 +440,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        public void images(Bitmap msxBitmap, Bitmap dcBitmap) {
+        public void images(Bitmap msxBitmap, Bitmap dcBitmap, Bitmap temperatureBitmap, double minTemp, double maxTemp) {
 
             try {
-                framesBuffer.put(new FrameDataHolder(msxBitmap, dcBitmap));
+                framesBuffer.put(new FrameDataHolder(msxBitmap, dcBitmap, temperatureBitmap, (int) minTemp, (int) maxTemp));
             } catch (InterruptedException e) {
                 //if interrupted while waiting for adding a new item in the queue
                 Log.e(TAG, "images(), unable to add incoming images to frames buffer, exception:" + e);
@@ -447,8 +454,18 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     Log.d(TAG, "framebuffer size:" + framesBuffer.size());
                     FrameDataHolder poll = framesBuffer.poll();
-                    msxImage.setImageBitmap(poll.msxBitmap);
+                    msxImage.setImageBitmap(poll.scaledTemperatureBitmap);
                     photoImage.setImageBitmap(poll.dcBitmap);
+                    minTemperature = (int) minTemp;
+                    maxTemperature = (int) maxTemp;
+
+                    // update center pos temperature
+                    int width = poll.scaledTemperatureBitmap.getWidth() / 2;  // center pos
+                    int height = poll.scaledTemperatureBitmap.getHeight() / 2;
+                    double temp_val = (double) Color.red(poll.scaledTemperatureBitmap.getPixel(width, height));
+                    temp_val = minTemperature + temp_val * (maxTemperature - minTemperature) / 255.0;
+                    temp_val = Math.round(temp_val * 100.0) / 100.0;  // Round 2 decimals after dot
+                    centerPosTemperatureStatus.setText(getString(R.string.center_temp_text, String.valueOf(temp_val)) + "°C");
                 }
             });
 
@@ -501,6 +518,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupViews() {
         connectionStatus = findViewById(R.id.connection_status_text);
+        centerPosTemperatureStatus = findViewById(R.id.center_temp_text);
         discoveryStatus = findViewById(R.id.discovery_status);
         sendFreqStatus = findViewById(R.id.send_freq_text);
         sendFreqSlider = findViewById(R.id.send_freq_slider);
